@@ -98,17 +98,40 @@ const AI = (function(){
 
   function parseJSON(text){
     let t=(text||"").trim();
-    t=t.replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/,"");   // снять ограждение ```
+    t=t.replace(/<think>[\s\S]*?<\/think>/gi,"").trim();          // убрать блок размышлений, если есть
+    t=t.replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/,"");    // снять ограждение ```
     try{ return JSON.parse(t); }catch(e){}
     const i=t.indexOf("{"), j=t.lastIndexOf("}");
-    if(i>=0&&j>i){ return JSON.parse(t.slice(i,j+1)); }           // выдернуть { ... }
+    if(i>=0&&j>i){
+      let s=t.slice(i,j+1);
+      try{ return JSON.parse(s); }catch(e){}
+      s=s.replace(/,\s*([}\]])/g,"$1");                          // убрать висячие запятые
+      return JSON.parse(s);
+    }
     throw new Error("Модель вернула не JSON");
+  }
+
+  // Запрос с ожиданием JSON + одна повторная попытка при кривом ответе.
+  async function chatJSON(messages){
+    let raw=await chat(messages);
+    try{ return parseJSON(raw); }
+    catch(e){
+      const retry=messages.concat([
+        modelTurn(raw),
+        userTurn("Твой прошлый ответ не был валидным JSON. Верни ТО ЖЕ САМОЕ строго как один валидный JSON-объект по схеме из системного сообщения — без markdown, без текста вне JSON.")
+      ]);
+      raw=await chat(retry);
+      return parseJSON(raw);
+    }
   }
 
   async function chat(messages, opts){
     if(!hasKey()) throw new Error("NO_KEY");
-    const body={ model: model()||"llama-3.3-70b-versatile", messages, temperature:0.7, max_tokens:1024 };
-    if(opts&&opts.json) body.response_format={ type:"json_object" };
+    // Намеренно НЕ используем response_format:json_object — у Groq это включает строгую
+    // серверную валидацию, которая бракует ответ целиком. Просим JSON в промпте и
+    // разбираем сами (parseJSON терпим к обёрткам и лишнему тексту). max_tokens с запасом,
+    // чтобы длинный ответ (feedback+reply+words, кит.+рус.) не обрывался и не ломал JSON.
+    const body={ model: model()||"llama-3.3-70b-versatile", messages, temperature:0.6, max_tokens:2048 };
     const headers={ "Content-Type":"application/json", "Authorization":"Bearer "+key() };
     if(provider()==="openrouter"){ headers["HTTP-Referer"]="https://dvishnevskiy24.github.io/chinese-sim/"; headers["X-Title"]="chinese-sim"; }
     const res=await fetch(base()+"/chat/completions",{ method:"POST", headers, body:JSON.stringify(body) });
@@ -126,23 +149,21 @@ const AI = (function(){
 
   // Начать сцену.
   async function start(scene){
-    const raw=await chat([ sys(scene), userTurn("[НАЧАЛО СЦЕНЫ] Поприветствуй Диму и задай первую реплику по своей роли. feedback = null.") ], {json:true});
-    const data=parseJSON(raw);
+    const data=await chatJSON([ sys(scene), userTurn("[НАЧАЛО СЦЕНЫ] Поприветствуй Диму и задай первую реплику по своей роли. feedback = null.") ]);
     return { data, rawTurn: data.reply ? data.reply.hanzi : "" };
   }
 
   // Ход: оценка ответа Димы + следующая реплика.
   async function turn(history, userText, scene){
     const msgs=[ sys(scene) ].concat(history).concat([ userTurn(userText) ]);
-    const raw=await chat(msgs, {json:true});
-    const data=parseJSON(raw);
+    const data=await chatJSON(msgs);
     return { data, userText, rawTurn: data.reply ? data.reply.hanzi : "" };
   }
 
   // Подсказка (обычный текст, сцену не двигает).
   async function hint(history, scene){
     const msgs=[ sys(scene) ].concat(history).concat([ userTurn("[СИСТЕМА] Дима не знает, что ответить. Не продолжай сцену и не давай JSON. Просто подскажи ПО-РУССКИ в 1-2 предложениях, что уместно сказать, и дай ОДИН короткий пример в формате: пиньинь — перевод.") ]);
-    return await chat(msgs, {json:false});
+    return await chat(msgs);
   }
 
   return { hasKey, key, setKey, provider, providerLabel, model, setModel, models, setModels, test, start, turn, hint, userTurn, modelTurn };
