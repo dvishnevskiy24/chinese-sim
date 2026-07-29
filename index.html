@@ -117,19 +117,18 @@
   <!-- ЭКРАН ВВОДА КЛЮЧА -->
   <div class="pad hidden" id="setup">
     <div class="box">
-      <h2>🔑 Один раз: бесплатный ключ Gemini</h2>
-      <p>Чтобы собеседник понимал любые твои фразы, проверял ошибки и вёл живой разговор, приложению нужен бесплатный ключ Google Gemini. Ключ хранится <b>только в этом телефоне</b> и никуда не отправляется, кроме самого Google.</p>
+      <h2>🔑 Один раз: бесплатный ключ Groq</h2>
+      <p>Чтобы собеседник понимал любые твои фразы, проверял ошибки и вёл живой разговор, нужен бесплатный ключ. Берём <b>Groq</b> — быстрый и с щедрым бесплатным лимитом. Ключ хранится <b>только в этом телефоне</b>.</p>
       <ol>
-        <li>Открой <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> и войди в Google-аккаунт.</li>
-        <li>Нажми <b>«Create API key»</b> → скопируй ключ (длинная строка, начинается с <code>AIza…</code>).</li>
-        <li>Вставь его сюда:</li>
+        <li>Открой <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a> и войди (Google/GitHub — 10 секунд).</li>
+        <li>Нажми <b>«Create API Key»</b> → скопируй ключ (начинается с <code>gsk_…</code>).</li>
+        <li>Вставь его сюда и нажми «Проверить ключ»:</li>
       </ol>
-      <input class="field" id="keyInput" type="password" placeholder="AIzaSy..." autocomplete="off" autocapitalize="off" spellcheck="false">
+      <input class="field" id="keyInput" type="password" placeholder="gsk_..." autocomplete="off" autocapitalize="off" spellcheck="false">
       <button class="btn" id="keySave">Сохранить и начать</button>
       <button class="btn sec" id="keyTest">Проверить ключ</button>
       <div class="keystate" id="keyState"></div>
-      <p style="margin-top:12px">Лучше всего работает ключ вида <code>AIzaSy…</code>. Если Google выдал ключ на <code>AQ.</code> — сначала жми «Проверить ключ»: приложение скажет, годится ли он.</p>
-      <p>Это бесплатный тариф Google (free tier). Денег не списывают. Нужен интернет во время занятия.</p>
+      <p style="margin-top:12px">Полностью бесплатно, карта не нужна. Нужен интернет во время занятия. <br>Подойдёт и ключ <a href="https://openrouter.ai/keys" target="_blank" rel="noopener">OpenRouter</a> (<code>sk-or-…</code>) — приложение поймёт сам.</p>
     </div>
   </div>
 
@@ -157,7 +156,13 @@
         <label class="toggle"><input type="checkbox" id="showSel"><span></span></label></div>
     </div>
     <div class="box">
-      <h2>🔑 Ключ Gemini</h2>
+      <h2>🧠 Модель ИИ</h2>
+      <div class="row"><div><label>Модель</label><div class="sub" id="modelSub">выбери, если качество не нравится</div></div>
+        <select class="field" id="modelSel"></select></div>
+      <p>Если собеседник отвечает странно или путает языки — попробуй другую модель из списка.</p>
+    </div>
+    <div class="box">
+      <h2>🔑 Ключ доступа</h2>
       <div class="keystate ok" id="keyState2"></div>
       <button class="btn sec" id="keyChange">Изменить ключ</button>
     </div>
@@ -180,7 +185,7 @@
 </div>
 
 <script src="scenarios.js"></script>
-<script src="gemini.js"></script>
+<script src="engine.js"></script>
 <script>
 (function(){
   "use strict";
@@ -297,10 +302,11 @@
   // ---------- Ошибки ----------
   function errText(e){
     const m=e&&e.message||"";
-    if(m==="NO_KEY") return "Ключ Gemini не задан — открой настройки (⚙︎).";
-    if(m==="BAD_KEY") return "Ключ Gemini неверный — проверь, что скопировал его целиком.";
-    if(m.indexOf("KEY_UNSUPPORTED")===0) return "Этот ключ не подходит для приложения (похоже, формат AQ., который Google выдаёт по-новому). Нужен ключ вида AIzaSy… — как его получить, я подскажу.";
-    if(m.indexOf("RATE")===0) return "Слишком много запросов подряд — подожди минутку и попробуй ещё раз.";
+    if(m==="NO_KEY") return "Ключ не задан — открой настройки (⚙︎).";
+    if(m==="BAD_KEY") return "Ключ неверный — проверь, что скопировал его целиком.";
+    if(m.indexOf("LIMIT")===0) return "Похоже, исчерпан бесплатный лимит запросов на сегодня. Попробуй позже или заведи ключ другого провайдера в настройках.";
+    if(m.indexOf("RATE")===0) return "Слишком много запросов подряд — подожди полминуты и попробуй ещё раз.";
+    if(m.indexOf("не JSON")>=0) return "Модель ответила не в том формате. Попробуй ещё раз или смени модель в настройках (🧠).";
     if(/Failed to fetch|NetworkError/i.test(m)) return "Нет интернета — для разговора нужна сеть.";
     return "Ошибка: "+m.replace(/^HTTP \d+: /,"");
   }
@@ -313,8 +319,8 @@
     sysBubble("<b>"+esc(s.title)+"</b><br>"+esc(s.desc)+"<br><span style='color:var(--accent2)'>Собеседник сейчас заговорит. Слушай 🔊 и отвечай пиньинем.</span>");
     typing(true); busy=true; setDock(false);
     try{
-      const {data,rawTurn}=await Gemini.start(s.scene);
-      history.push(Gemini.userTurn("[НАЧАЛО]"), Gemini.modelTurn(rawTurn));
+      const {data,rawTurn}=await AI.start(s.scene);
+      history.push(AI.userTurn("[НАЧАЛО]"), AI.modelTurn(rawTurn));
       typing(false);
       current=npcBubble(data.reply);
     }catch(e){ typing(false); sysBubble("⚠️ "+esc(errText(e))); }
@@ -329,8 +335,8 @@
     $("#input").value=""; autosize();
     typing(true); busy=true; setDock(false);
     try{
-      const {data,rawTurn}=await Gemini.turn(history, val, scen.scene);
-      history.push(Gemini.userTurn(val), Gemini.modelTurn(rawTurn));
+      const {data,rawTurn}=await AI.turn(history, val, scen.scene);
+      history.push(AI.userTurn(val), AI.modelTurn(rawTurn));
       typing(false);
       if(data.feedback) feedbackBubble(data.feedback);
       current=npcBubble(data.reply);
@@ -342,7 +348,7 @@
     if(busy) return;
     typing(true); busy=true; setDock(false);
     try{
-      const txt=await Gemini.hint(history, scen.scene);
+      const txt=await AI.hint(history, scen.scene);
       typing(false);
       sysBubble("<b>💡 Подсказка:</b><br>"+esc(txt).replace(/\n/g,"<br>"));
     }catch(e){ typing(false); sysBubble("⚠️ "+esc(errText(e))); }
@@ -367,7 +373,7 @@
     const c=el("div","card");
     c.appendChild(el("div","ic",s.icon));
     const box=el("div"); box.appendChild(el("div","t",s.title)); box.appendChild(el("div","d",s.desc));
-    c.appendChild(box); c.onclick=()=>{ if(Gemini.hasKey()) openScenario(s); else show("setup"); };
+    c.appendChild(box); c.onclick=()=>{ if(AI.hasKey()) openScenario(s); else show("setup"); };
     cards.appendChild(c);
   });
 
@@ -377,27 +383,39 @@
 
   // ---------- Ключ ----------
   function refreshKeyState(){
-    const on=Gemini.hasKey();
+    const on=AI.hasKey();
     $("#keyState2").className="keystate "+(on?"ok":"no");
-    $("#keyState2").textContent=on?"✓ Ключ сохранён на этом устройстве.":"Ключ не задан.";
+    $("#keyState2").textContent=on?("✓ Ключ "+AI.providerLabel()+" сохранён на этом устройстве."):"Ключ не задан.";
+    fillModels();
   }
-  $("#keySave").onclick=()=>{
+  async function saveAndTest(){
     const k=$("#keyInput").value.trim();
-    if(k.length<10){ $("#keyState").className="keystate no"; $("#keyState").textContent="Похоже, ключ слишком короткий. Скопируй его целиком."; return; }
-    Gemini.setKey(k); $("#keyInput").value="";
-    $("#keyState").className="keystate ok"; $("#keyState").textContent="✓ Сохранено!";
-    setTimeout(()=>{ show("menu"); $("#title").textContent="华语情景"; },500);
-  };
-  $("#keyChange").onclick=()=>{ show("setup"); $("#keyInput").value=Gemini.key(); $("#title").textContent="华语情景"; };
-  $("#keyTest").onclick=async()=>{
-    const k=$("#keyInput").value.trim(); if(k.length>=10) Gemini.setKey(k);
-    $("#keyState").className="keystate"; $("#keyState").textContent="Проверяю…";
-    const r=await Gemini.test();
-    if(r.ok){ $("#keyState").className="keystate ok"; $("#keyState").textContent="✓ Ключ работает! ("+r.msg+") Жми «Сохранить и начать»."; }
-    else if(r.status===401||r.status===403||/ACCESS_TOKEN_TYPE_UNSUPPORTED/i.test(r.msg)){ $("#keyState").className="keystate no"; $("#keyState").textContent="✗ Ключ не подходит (формат AQ. / нет доступа). Нужен ключ вида AIzaSy…"; }
+    if(k.length<15){ $("#keyState").className="keystate no"; $("#keyState").textContent="Похоже, ключ слишком короткий. Скопируй его целиком."; return; }
+    AI.setKey(k);
+    $("#keyState").className="keystate"; $("#keyState").textContent="Проверяю ключ…";
+    const r=await AI.test();
+    if(r.ok){
+      $("#keyInput").value="";
+      $("#keyState").className="keystate ok"; $("#keyState").textContent="✓ Работает! "+r.msg;
+      setTimeout(()=>{ show("menu"); $("#title").textContent="华语情景"; },700);
+    } else if(r.status===401){ $("#keyState").className="keystate no"; $("#keyState").textContent="✗ Ключ не принят. Проверь, что скопировал целиком (Groq: gsk_… , OpenRouter: sk-or-…)."; }
     else if(r.status===0){ $("#keyState").className="keystate no"; $("#keyState").textContent="✗ Нет интернета или ключ пустой."; }
     else { $("#keyState").className="keystate no"; $("#keyState").textContent="✗ Ошибка ("+r.status+"): "+r.msg; }
-  };
+  }
+  $("#keySave").onclick=saveAndTest;
+  $("#keyTest").onclick=saveAndTest;
+  $("#keyChange").onclick=()=>{ show("setup"); $("#keyInput").value=AI.key(); $("#title").textContent="华语情景"; };
+
+  // ---------- Выбор модели ----------
+  function fillModels(){
+    const sel=$("#modelSel"); if(!sel) return;
+    const list=AI.models(); sel.innerHTML="";
+    if(!list.length){ sel.appendChild(el("option",null,"— проверь ключ —")); return; }
+    list.forEach(id=>{ const o=el("option",null,id); o.value=id; sel.appendChild(o); });
+    sel.value=AI.model();
+    $("#modelSub").textContent=AI.providerLabel()+" · выбрана: "+(AI.model()||"—");
+  }
+  $("#modelSel").onchange=e=>{ AI.setModel(e.target.value); $("#modelSub").textContent=AI.providerLabel()+" · выбрана: "+e.target.value; };
 
   // ---------- Настройки ----------
   $("#autoSel").checked=cfg.auto; $("#showSel").checked=cfg.show; $("#rateSel").value=cfg.rate;
@@ -412,6 +430,6 @@
 
   // ---------- Старт ----------
   if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
-  show(Gemini.hasKey()?"menu":"setup");
+  show(AI.hasKey()?"menu":"setup");
 })();
 </script>

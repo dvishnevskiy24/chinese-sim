@@ -1,6 +1,6 @@
 // Кэш оболочки приложения. Сам ИИ-разговор требует интернета (запросы к Gemini не кэшируются).
-const CACHE = "chinese-sim-v3";
-const ASSETS = ["./","./index.html","./scenarios.js","./gemini.js","./manifest.json","./icon.svg"];
+const CACHE = "chinese-sim-v4";
+const ASSETS = ["./","./index.html","./scenarios.js","./engine.js","./manifest.json","./icon.svg"];
 
 self.addEventListener("install", e=>{
   e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));
@@ -10,8 +10,8 @@ self.addEventListener("activate", e=>{
 });
 self.addEventListener("fetch", e=>{
   if(e.request.method!=="GET") return;
-  // Запросы к Gemini не трогаем — идут напрямую в сеть.
-  if(e.request.url.indexOf("generativelanguage.googleapis.com")>-1) return;
+  // Запросы к ИИ-провайдерам не кэшируем — идут напрямую в сеть.
+  if(/groq\.com|openrouter\.ai|googleapis\.com/.test(e.request.url)) return;
   e.respondWith(
     caches.match(e.request).then(hit=> hit || fetch(e.request).then(res=>{
       const copy=res.clone();
