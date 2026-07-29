@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#0f1115"/>
+  <rect x="40" y="40" width="432" height="432" rx="88" fill="#e7484f"/>
+  <text x="256" y="330" font-size="240" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" fill="#fff" font-weight="700">华</text>
+</svg>

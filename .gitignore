@@ -1,0 +1,12 @@
+# Секреты и окружение
+.env
+.env.*
+*.key
+*.pem
+credentials*
+tokens*
+
+# Системный мусор
+.DS_Store
+Thumbs.db
+node_modules/
