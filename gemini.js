@@ -62,15 +62,19 @@ const Gemini = (function(){
       generationConfig: { temperature: 0.7, maxOutputTokens: 1024 }
     };
     if(useSchema){ body.generationConfig.responseMimeType="application/json"; body.generationConfig.responseSchema=RESP_SCHEMA; }
-    const res = await fetch(URL(MODEL)+"?key="+encodeURIComponent(key()), {
-      method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)
+    // Ключ передаём в заголовке x-goog-api-key (текущий рекомендованный способ; не светит ключ в URL).
+    const res = await fetch(URL(MODEL), {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "x-goog-api-key": key() },
+      body: JSON.stringify(body)
     });
     if(!res.ok){
       let msg = "HTTP "+res.status;
       try{ const j=await res.json(); if(j.error&&j.error.message) msg=j.error.message; }catch(e){}
-      if(res.status===400 && /API key/i.test(msg)) throw new Error("BAD_KEY");
-      if(res.status===429) throw new Error("RATE");
-      throw new Error(msg);
+      if(res.status===400 && /API key not valid|API_KEY_INVALID/i.test(msg)) throw new Error("BAD_KEY");
+      if(res.status===401 || res.status===403 || /ACCESS_TOKEN_TYPE_UNSUPPORTED/i.test(msg)) throw new Error("KEY_UNSUPPORTED::"+msg);
+      if(res.status===429) throw new Error("RATE::"+msg);
+      throw new Error("HTTP "+res.status+": "+msg);
     }
     const j = await res.json();
     const text = (((j.candidates||[])[0]||{}).content||{}).parts?.[0]?.text || "";
@@ -101,5 +105,15 @@ const Gemini = (function(){
     return await call(contents, scene, false);
   }
 
-  return { hasKey, key, setKey, start, turn, hint, userTurn, modelTurn };
+  // Диагностика ключа: лёгкий запрос списка моделей.
+  async function test(){
+    if(!hasKey()) return { ok:false, status:0, msg:"ключ не задан" };
+    try{
+      const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models", { headers:{ "x-goog-api-key": key() } });
+      let msg=""; try{ const j=await res.json(); if(j.error&&j.error.message) msg=j.error.message; else if(j.models) msg=j.models.length+" моделей доступно"; }catch(e){}
+      return { ok:res.ok, status:res.status, msg };
+    }catch(e){ return { ok:false, status:0, msg:(e.message||"нет сети") }; }
+  }
+
+  return { hasKey, key, setKey, start, turn, hint, test, userTurn, modelTurn };
 })();

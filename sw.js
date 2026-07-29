@@ -1,5 +1,5 @@
 // Кэш оболочки приложения. Сам ИИ-разговор требует интернета (запросы к Gemini не кэшируются).
-const CACHE = "chinese-sim-v2";
+const CACHE = "chinese-sim-v3";
 const ASSETS = ["./","./index.html","./scenarios.js","./gemini.js","./manifest.json","./icon.svg"];
 
 self.addEventListener("install", e=>{

@@ -124,10 +124,12 @@
         <li>Нажми <b>«Create API key»</b> → скопируй ключ (длинная строка, начинается с <code>AIza…</code>).</li>
         <li>Вставь его сюда:</li>
       </ol>
-      <input class="field" id="keyInput" type="password" placeholder="AIza..." autocomplete="off" autocapitalize="off" spellcheck="false">
+      <input class="field" id="keyInput" type="password" placeholder="AIzaSy..." autocomplete="off" autocapitalize="off" spellcheck="false">
       <button class="btn" id="keySave">Сохранить и начать</button>
+      <button class="btn sec" id="keyTest">Проверить ключ</button>
       <div class="keystate" id="keyState"></div>
-      <p style="margin-top:12px">Это бесплатный тариф Google (free tier). Денег не списывают. Нужен интернет во время занятия.</p>
+      <p style="margin-top:12px">Лучше всего работает ключ вида <code>AIzaSy…</code>. Если Google выдал ключ на <code>AQ.</code> — сначала жми «Проверить ключ»: приложение скажет, годится ли он.</p>
+      <p>Это бесплатный тариф Google (free tier). Денег не списывают. Нужен интернет во время занятия.</p>
     </div>
   </div>
 
@@ -295,10 +297,12 @@
   // ---------- Ошибки ----------
   function errText(e){
     const m=e&&e.message||"";
-    if(m==="NO_KEY"||m==="BAD_KEY") return "Проблема с ключом Gemini. Проверь его в настройках (⚙︎).";
-    if(m==="RATE") return "Слишком много запросов подряд — подожди минутку и попробуй ещё раз.";
+    if(m==="NO_KEY") return "Ключ Gemini не задан — открой настройки (⚙︎).";
+    if(m==="BAD_KEY") return "Ключ Gemini неверный — проверь, что скопировал его целиком.";
+    if(m.indexOf("KEY_UNSUPPORTED")===0) return "Этот ключ не подходит для приложения (похоже, формат AQ., который Google выдаёт по-новому). Нужен ключ вида AIzaSy… — как его получить, я подскажу.";
+    if(m.indexOf("RATE")===0) return "Слишком много запросов подряд — подожди минутку и попробуй ещё раз.";
     if(/Failed to fetch|NetworkError/i.test(m)) return "Нет интернета — для разговора нужна сеть.";
-    return "Ошибка: "+m;
+    return "Ошибка: "+m.replace(/^HTTP \d+: /,"");
   }
 
   // ---------- Ход игры ----------
@@ -385,6 +389,15 @@
     setTimeout(()=>{ show("menu"); $("#title").textContent="华语情景"; },500);
   };
   $("#keyChange").onclick=()=>{ show("setup"); $("#keyInput").value=Gemini.key(); $("#title").textContent="华语情景"; };
+  $("#keyTest").onclick=async()=>{
+    const k=$("#keyInput").value.trim(); if(k.length>=10) Gemini.setKey(k);
+    $("#keyState").className="keystate"; $("#keyState").textContent="Проверяю…";
+    const r=await Gemini.test();
+    if(r.ok){ $("#keyState").className="keystate ok"; $("#keyState").textContent="✓ Ключ работает! ("+r.msg+") Жми «Сохранить и начать»."; }
+    else if(r.status===401||r.status===403||/ACCESS_TOKEN_TYPE_UNSUPPORTED/i.test(r.msg)){ $("#keyState").className="keystate no"; $("#keyState").textContent="✗ Ключ не подходит (формат AQ. / нет доступа). Нужен ключ вида AIzaSy…"; }
+    else if(r.status===0){ $("#keyState").className="keystate no"; $("#keyState").textContent="✗ Нет интернета или ключ пустой."; }
+    else { $("#keyState").className="keystate no"; $("#keyState").textContent="✗ Ошибка ("+r.status+"): "+r.msg; }
+  };
 
   // ---------- Настройки ----------
   $("#autoSel").checked=cfg.auto; $("#showSel").checked=cfg.show; $("#rateSel").value=cfg.rate;
