@@ -4,12 +4,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f1115">
 <link rel="manifest" href="manifest.json">
-<title>华语情景 · Разговорный китайский</title>
+<title>华语情景 · Живой китайский</title>
 <style>
   :root{
     --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
     --txt:#eef1f6; --dim:#9aa4b2; --accent:#e7484f; --accent2:#f4a01c;
-    --good:#3ecb7a; --bad:#ff6b6b; --npc:#2a3550; --me:#1f3d2e;
+    --good:#3ecb7a; --ok:#f4a01c; --bad:#ff6b6b; --npc:#25304a; --me:#1f3d2e;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%}
@@ -22,22 +22,32 @@
   .wrap{max-width:640px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
   header{padding:14px 16px 10px;display:flex;align-items:center;gap:10px;position:sticky;top:0;background:linear-gradient(var(--bg),rgba(15,17,21,.85));backdrop-filter:blur(8px);z-index:5;border-bottom:1px solid var(--line)}
   header h1{font-size:17px;margin:0;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .back{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:8px 12px;font-size:15px}
-  .prog{font-size:13px;color:var(--dim)}
+  .iconbtn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:8px 12px;font-size:15px}
 
-  /* Меню сценариев */
-  .menu{padding:12px 16px 30px}
+  .pad{padding:12px 16px 30px}
   .intro{color:var(--dim);font-size:14px;margin:6px 2px 16px}
   .card{display:flex;gap:14px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;cursor:pointer;transition:transform .06s}
   .card:active{transform:scale(.985)}
   .card .ic{font-size:30px;width:46px;text-align:center}
   .card .t{font-weight:600;font-size:16px}
   .card .d{color:var(--dim);font-size:13px;margin-top:2px}
-  .settings{margin-top:18px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:8px 16px}
-  .row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}
+
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+  .box h2{font-size:15px;margin:0 0 8px}
+  .box p{font-size:13.5px;color:var(--dim);margin:6px 0}
+  .box ol{font-size:13.5px;color:var(--dim);margin:8px 0;padding-left:20px;line-height:1.6}
+  .box a{color:var(--accent2)}
+  .field{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:12px 14px;font-size:15px;margin-top:8px}
+  .btn{width:100%;background:var(--accent);border:0;color:#fff;font-weight:700;border-radius:14px;padding:14px;font-size:16px;margin-top:10px}
+  .btn.sec{background:var(--panel2);border:1px solid var(--line);color:var(--txt);font-weight:600}
+  .keystate{font-size:12.5px;margin-top:8px}
+  .keystate.ok{color:var(--good)} .keystate.no{color:var(--bad)}
+
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
   .row:last-child{border-bottom:0}
   .row label{font-size:15px}
   .row .sub{font-size:12px;color:var(--dim)}
+  select.field{margin-top:0;width:auto;max-width:190px}
   .toggle{position:relative;width:52px;height:30px;flex:none}
   .toggle input{display:none}
   .toggle span{position:absolute;inset:0;background:var(--panel2);border:1px solid var(--line);border-radius:30px;transition:.2s}
@@ -45,78 +55,113 @@
   .toggle input:checked+span{background:var(--good);border-color:var(--good)}
   .toggle input:checked+span::after{left:25px}
 
-  /* Диалог */
+  /* Чат */
   .chat{flex:1;padding:14px 12px 6px;display:flex;flex-direction:column;gap:12px}
-  .bub{max-width:88%;padding:12px 14px;border-radius:18px;position:relative;word-wrap:break-word}
+  .bub{max-width:90%;padding:12px 14px;border-radius:18px;word-wrap:break-word;animation:pop .18s ease}
+  @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
   .bub.npc{background:var(--npc);border-bottom-left-radius:6px;align-self:flex-start}
   .bub.me{background:var(--me);border-bottom-right-radius:6px;align-self:flex-end}
   .bub.sys{background:var(--panel2);align-self:center;max-width:96%;border:1px solid var(--line);font-size:14px;color:var(--dim)}
+  .bub.fb{background:var(--panel);border:1px solid var(--line);align-self:flex-start;max-width:96%}
   .py{font-size:17px;font-weight:600;letter-spacing:.2px}
-  .hz{font-size:20px;margin-top:3px;display:none}
-  .hz.show{display:block}
+  .hz{font-size:21px;margin-top:3px}
   .ru{font-size:13.5px;color:var(--dim);margin-top:4px}
   .bub.me .ru{color:#bfe6cf}
+  .listen{display:flex;align-items:center;gap:10px}
+  .playbig{background:var(--accent);border:0;color:#fff;width:52px;height:52px;border-radius:50%;font-size:22px;flex:none;display:flex;align-items:center;justify-content:center}
+  .playbig:active{transform:scale(.94)}
+  .listenlbl{font-size:13.5px;color:var(--dim)}
   .speak{margin-top:8px;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:var(--txt);border-radius:20px;padding:6px 12px;font-size:13px}
   .speak:active{background:rgba(255,255,255,.16)}
-  .revealHz{margin-top:6px;font-size:12px;color:var(--accent2);background:none;border:0;padding:4px 0;display:block}
+  .miniact{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+  .miniact button{font-size:12.5px;background:none;border:1px solid var(--line);color:var(--accent2);border-radius:16px;padding:6px 12px}
 
-  /* Разбор слов */
   .words{margin-top:10px;border-top:1px dashed rgba(255,255,255,.15);padding-top:8px}
   .words .w{display:flex;gap:8px;font-size:13.5px;padding:3px 0}
-  .words .w b{color:var(--accent2);min-width:96px;font-weight:600}
-  .feedback{font-size:13px;margin-top:6px;font-weight:600}
-  .feedback.ok{color:var(--good)}
-  .feedback.no{color:var(--bad)}
+  .words .w b{color:var(--accent2);min-width:92px;font-weight:600}
 
-  /* Панель ввода */
+  .verdict{font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .verdict.good{color:var(--good)} .verdict.ok{color:var(--ok)} .verdict.wrong{color:var(--bad)}
+  .fb .cmt{font-size:14px;margin:8px 0}
+  .fb .lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);margin-top:10px}
+  .fb .line{margin-top:3px}
+  .fb .line .py{font-size:15.5px}
+  .fb .line .hz{font-size:18px}
+
+  .typing{align-self:flex-start;color:var(--dim);font-size:14px;padding:8px 14px}
+  .typing span{display:inline-block;animation:blink 1.2s infinite}
+  .typing span:nth-child(2){animation-delay:.2s} .typing span:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
+
   .dock{position:sticky;bottom:0;background:linear-gradient(rgba(15,17,21,0),var(--bg) 22%);padding:8px 12px calc(10px + env(safe-area-inset-bottom));z-index:5}
-  .helprow{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-  .chip{flex:1;min-width:calc(50% - 4px);background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:11px 8px;font-size:13.5px;font-weight:500;text-align:center}
+  .helprow{display:flex;gap:8px;margin-bottom:8px}
+  .chip{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:11px 8px;font-size:13px;font-weight:500;text-align:center}
   .chip:active{background:#252b36}
-  .chip.hint{color:var(--accent2)}
-  .chip.give{color:var(--accent)}
+  .chip.hint{color:var(--accent2)} .chip.give{color:var(--accent)}
   .inbar{display:flex;gap:8px;align-items:flex-end}
   .inbar textarea{flex:1;resize:none;background:var(--panel);border:1px solid var(--line);color:var(--txt);border-radius:16px;padding:12px 14px;font-size:16px;max-height:120px;line-height:1.35}
   .inbar textarea:focus{outline:none;border-color:var(--accent)}
   .send{flex:none;width:48px;height:48px;border-radius:50%;background:var(--accent);border:0;color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center}
   .send:disabled{opacity:.4}
-  .nextbar{padding:0 12px calc(14px + env(safe-area-inset-bottom))}
-  .next{width:100%;background:var(--good);border:0;color:#062915;font-weight:700;border-radius:16px;padding:15px;font-size:16px}
-  .restart{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:16px;padding:15px;font-size:16px;margin-top:10px}
   .kbdhint{font-size:11px;color:var(--dim);text-align:center;margin:6px 0 0}
   .hidden{display:none!important}
 </style>
 
 <div class="wrap">
   <header>
-    <button class="back hidden" id="backBtn">‹ Назад</button>
+    <button class="iconbtn hidden" id="backBtn">‹</button>
     <h1 id="title">华语情景</h1>
-    <span class="prog hidden" id="prog"></span>
+    <button class="iconbtn" id="gearBtn">⚙︎</button>
   </header>
 
-  <!-- ЭКРАН МЕНЮ -->
-  <div class="menu" id="menu">
-    <p class="intro">Живые бытовые диалоги. Собеседник пишет и озвучивает фразу — ты отвечаешь пиньинем (без тонов, опечатки не страшны). Не знаешь, что сказать, или не понял вопрос — жми кнопки внизу, всё объяснят.</p>
-    <div id="cards"></div>
-
-    <div class="settings">
-      <div class="row">
-        <div><label>Автоозвучка фраз</label><div class="sub">Собеседник сам произносит новую реплику</div></div>
-        <label class="toggle"><input type="checkbox" id="setAuto" checked><span></span></label>
-      </div>
-      <div class="row">
-        <div><label>Показывать иероглифы сразу</label><div class="sub">Иначе они под кнопкой «показать 汉字»</div></div>
-        <label class="toggle"><input type="checkbox" id="setHz"><span></span></label>
-      </div>
-      <div class="row">
-        <div><label>Скорость речи</label><div class="sub">Медленнее — легче расслышать</div></div>
-        <input type="range" id="setRate" min="0.5" max="1" step="0.1" value="0.8" style="width:120px">
-      </div>
+  <!-- ЭКРАН ВВОДА КЛЮЧА -->
+  <div class="pad hidden" id="setup">
+    <div class="box">
+      <h2>🔑 Один раз: бесплатный ключ Gemini</h2>
+      <p>Чтобы собеседник понимал любые твои фразы, проверял ошибки и вёл живой разговор, приложению нужен бесплатный ключ Google Gemini. Ключ хранится <b>только в этом телефоне</b> и никуда не отправляется, кроме самого Google.</p>
+      <ol>
+        <li>Открой <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> и войди в Google-аккаунт.</li>
+        <li>Нажми <b>«Create API key»</b> → скопируй ключ (длинная строка, начинается с <code>AIza…</code>).</li>
+        <li>Вставь его сюда:</li>
+      </ol>
+      <input class="field" id="keyInput" type="password" placeholder="AIza..." autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button class="btn" id="keySave">Сохранить и начать</button>
+      <div class="keystate" id="keyState"></div>
+      <p style="margin-top:12px">Это бесплатный тариф Google (free tier). Денег не списывают. Нужен интернет во время занятия.</p>
     </div>
-    <p class="kbdhint" id="voiceWarn"></p>
   </div>
 
-  <!-- ЭКРАН ДИАЛОГА -->
+  <!-- МЕНЮ -->
+  <div class="pad hidden" id="menu">
+    <p class="intro">Выбери ситуацию — собеседник заговорит по-китайски. Слушай реплику 🔊, отвечай пиньинем (можешь вставлять незнакомые слова в скобках: <code>(taxi)</code>). ИИ проверит, поправит ошибки, покажет, как сказал бы носитель, и задаст встречный вопрос.</p>
+    <div id="cards"></div>
+  </div>
+
+  <!-- НАСТРОЙКИ -->
+  <div class="pad hidden" id="settings">
+    <div class="box">
+      <h2>🔊 Голос собеседника</h2>
+      <div class="row"><div><label>Голос</label><div class="sub" id="voiceSub">китайский голос</div></div>
+        <select class="field" id="voiceSel"></select></div>
+      <div class="row"><div><label>Скорость речи</label></div><input type="range" id="rateSel" min="0.5" max="1.1" step="0.1" style="width:150px"></div>
+      <button class="btn sec" id="voiceTest">▶︎ Проверить голос</button>
+      <p>Хочешь более приятный голос? На айфоне: <b>Настройки → Универсальный доступ → Устный контент → Голоса → Китайский</b> — скачай «улучшенный» голос, и он появится в списке выше.</p>
+    </div>
+    <div class="box">
+      <h2>⚙︎ Обучение</h2>
+      <div class="row"><div><label>Автоозвучка реплик</label><div class="sub">Собеседник сам произносит новую фразу</div></div>
+        <label class="toggle"><input type="checkbox" id="autoSel"><span></span></label></div>
+      <div class="row"><div><label>Сразу показывать текст реплики</label><div class="sub">Иначе — сначала только слушаешь</div></div>
+        <label class="toggle"><input type="checkbox" id="showSel"><span></span></label></div>
+    </div>
+    <div class="box">
+      <h2>🔑 Ключ Gemini</h2>
+      <div class="keystate ok" id="keyState2"></div>
+      <button class="btn sec" id="keyChange">Изменить ключ</button>
+    </div>
+  </div>
+
+  <!-- ЧАТ -->
   <div class="chat hidden" id="chat"></div>
 
   <div class="dock hidden" id="dock">
@@ -128,244 +173,232 @@
       <textarea id="input" rows="1" placeholder="Ответь пиньинем: ni hao, wo…" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
       <button class="send" id="sendBtn">➤</button>
     </div>
-    <p class="kbdhint">Тоны и знаки не важны. Пиши латиницей: «wo qu chengdu».</p>
-  </div>
-
-  <div class="nextbar hidden" id="nextbar">
-    <button class="next" id="nextBtn">Дальше ›</button>
+    <p class="kbdhint">Незнакомое слово — в скобках: <code>ni keyi bangzhu wo (get a taxi)?</code></p>
   </div>
 </div>
 
 <script src="scenarios.js"></script>
+<script src="gemini.js"></script>
 <script>
 (function(){
   "use strict";
   const $ = s => document.querySelector(s);
-  const el = (t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e;};
+  const el=(t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e;};
+  const esc=s=>(s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
 
-  // ---------- Настройки (сохраняются в телефоне) ----------
-  const store = {
-    get:(k,d)=>{try{const v=localStorage.getItem("cs_"+k); return v===null?d:JSON.parse(v);}catch(e){return d;}},
-    set:(k,v)=>{try{localStorage.setItem("cs_"+k,JSON.stringify(v));}catch(e){}}
-  };
-  const cfg = {
-    auto: store.get("auto", true),
-    hz:   store.get("hz", false),
-    rate: store.get("rate", 0.8)
-  };
-  $("#setAuto").checked = cfg.auto;
-  $("#setHz").checked = cfg.hz;
-  $("#setRate").value = cfg.rate;
-  $("#setAuto").onchange = e=>{cfg.auto=e.target.checked; store.set("auto",cfg.auto);};
-  $("#setHz").onchange   = e=>{cfg.hz=e.target.checked; store.set("hz",cfg.hz);};
-  $("#setRate").onchange = e=>{cfg.rate=parseFloat(e.target.value); store.set("rate",cfg.rate);};
+  const store={get:(k,d)=>{try{const v=localStorage.getItem("cs_"+k);return v===null?d:JSON.parse(v);}catch(e){return d;}},set:(k,v)=>{try{localStorage.setItem("cs_"+k,JSON.stringify(v));}catch(e){}}};
+  const cfg={auto:store.get("auto",true),show:store.get("show",false),rate:store.get("rate",0.85),voiceURI:store.get("voiceURI",null)};
 
-  // ---------- Озвучка (встроенный голос iPhone, бесплатно) ----------
-  let zhVoice = null;
-  function pickVoice(){
-    const vs = speechSynthesis.getVoices();
-    zhVoice = vs.find(v=>/zh(-|_)?CN/i.test(v.lang)) || vs.find(v=>/^zh/i.test(v.lang)) || null;
+  // ---------- Озвучка ----------
+  let voices=[];
+  const FEMALE=/ting|meijia|mei-jia|sinji|meilin|panpan|female|婷|美|欣/i;
+  function loadVoices(){
+    voices=(speechSynthesis.getVoices()||[]).filter(v=>/^zh/i.test(v.lang));
+    const sel=$("#voiceSel"); if(!sel) return;
+    sel.innerHTML="";
+    voices.forEach(v=>{const o=el("option",null,v.name+" ("+v.lang+")"); o.value=v.voiceURI; sel.appendChild(o);});
+    if(!voices.length){ sel.appendChild(el("option",null,"— нет китайских голосов —")); $("#voiceSub").textContent="в этом браузере нет кит. голоса — открой в Safari"; return; }
+    // выбрать сохранённый или первый женский
+    let chosen=voices.find(v=>v.voiceURI===cfg.voiceURI) || voices.find(v=>FEMALE.test(v.name)) || voices[0];
+    cfg.voiceURI=chosen.voiceURI; sel.value=chosen.voiceURI;
+    $("#voiceSub").textContent="выбери самый приятный";
   }
-  if("speechSynthesis" in window){
-    pickVoice(); speechSynthesis.onvoiceschanged = pickVoice;
-  } else {
-    $("#voiceWarn").textContent = "⚠️ Этот браузер не умеет озвучивать — открой в Safari.";
-  }
+  function curVoice(){ return voices.find(v=>v.voiceURI===cfg.voiceURI)||voices[0]||null; }
   function speak(text){
     if(!("speechSynthesis" in window)) return;
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "zh-CN"; u.rate = cfg.rate; if(zhVoice) u.voice = zhVoice;
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang="zh-CN"; u.rate=cfg.rate; const v=curVoice(); if(v)u.voice=v;
     speechSynthesis.speak(u);
   }
+  if("speechSynthesis" in window){ loadVoices(); speechSynthesis.onvoiceschanged=loadVoices; }
 
-  // ---------- Проверка ответа (пиньинь: без тонов, лениво) ----------
-  const TONE = {"ā":"a","á":"a","ǎ":"a","à":"a","ē":"e","é":"e","ě":"e","è":"e","ī":"i","í":"i","ǐ":"i","ì":"i","ō":"o","ó":"o","ǒ":"o","ò":"o","ū":"u","ú":"u","ǔ":"u","ù":"u","ǖ":"u","ǘ":"u","ǚ":"u","ǜ":"u","ü":"u","ń":"n","ň":"n"};
-  function norm(s){
-    s = (s||"").toLowerCase().trim();
-    let out="";
-    for(const ch of s){ out += (TONE[ch]!==undefined?TONE[ch]:ch); }
-    out = out.replace(/v/g,"u");              // v -> ü -> u
-    out = out.replace(/[^a-z0-9]/g,"");        // убрать пробелы и знаки
-    return out;
-  }
-  function lev(a,b){
-    const m=a.length,n=b.length; if(!m)return n; if(!n)return m;
-    let prev=Array.from({length:n+1},(_,i)=>i), cur=new Array(n+1);
-    for(let i=1;i<=m;i++){cur[0]=i;
-      for(let j=1;j<=n;j++){const c=a[i-1]===b[j-1]?0:1; cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+c);}
-      [prev,cur]=[cur,prev];
-    }
-    return prev[n];
-  }
-  function check(user, accepts){
-    const u = norm(user);
-    if(u.length<2) return false;
-    for(const a of accepts){
-      const na = norm(a);
-      if(!na) continue;
-      if(u===na) return true;
-      if(u.includes(na) || na.includes(u)) return true;   // «wo qu chengdu» ⊇ «qu chengdu»
-      const d = lev(u,na);
-      const tol = Math.max(1, Math.floor(Math.max(u.length,na.length)*0.22)); // ~22% опечаток ок
-      if(d<=tol) return true;
-    }
-    return false;
+  // ---------- Навигация экранов ----------
+  const screens=["setup","menu","settings","chat"];
+  function show(name){
+    screens.forEach(s=>$("#"+s).classList.toggle("hidden", s!==name));
+    $("#dock").classList.toggle("hidden", name!=="chat");
+    $("#backBtn").classList.toggle("hidden", name==="menu"||name==="setup");
+    $("#gearBtn").classList.toggle("hidden", name==="setup"||name==="chat"?false:false);
+    if(name!=="chat" && "speechSynthesis" in window) speechSynthesis.cancel();
   }
 
-  // ---------- Отрисовка пузырей ----------
+  // ---------- Состояние диалога ----------
   const chat=$("#chat");
+  let scen=null, history=[], current=null, busy=false;
   function scrollDown(){ requestAnimationFrame(()=>{ window.scrollTo(0,document.body.scrollHeight); chat.scrollTop=chat.scrollHeight; }); }
 
-  function npcBubble(t){
-    const b = el("div","bub npc");
-    b.appendChild(el("div","py",t.pinyin));
-    const hz = el("div","hz"+(cfg.hz?" show":""),t.hanzi); b.appendChild(hz);
-    b.appendChild(el("div","ru",t.ru));
-    const sp = el("button","speak","🔊 Прослушать"); sp.onclick=()=>speak(t.hanzi); b.appendChild(sp);
-    if(!cfg.hz){
-      const r=el("button","revealHz","показать 汉字");
-      r.onclick=()=>{hz.classList.add("show"); r.remove();};
-      b.appendChild(r);
-    }
-    chat.appendChild(b); scrollDown();
-    if(cfg.auto) setTimeout(()=>speak(t.hanzi),250);
-  }
-  function meBubble(text, ok){
-    const b=el("div","bub me");
-    b.appendChild(el("div","py",text));
-    const f=el("div","feedback "+(ok?"ok":"no"), ok?"✓ отлично, так и говорят":"↺ не совсем — глянь образец ниже");
-    b.appendChild(f);
-    chat.appendChild(b); scrollDown();
-  }
   function sysBubble(html){ const b=el("div","bub sys",html); chat.appendChild(b); scrollDown(); return b; }
+  function typing(on){
+    let t=$("#typing");
+    if(on){ if(!t){ t=el("div","typing"); t.id="typing"; t.innerHTML="собеседник печатает <span>•</span><span>•</span><span>•</span>"; chat.appendChild(t);} scrollDown(); }
+    else if(t) t.remove();
+  }
 
-  function modelBubble(t, words, header){
+  // Пузырь собеседника: сначала только слушаем (текст скрыт), потом раскрываем.
+  function npcBubble(r){
     const b=el("div","bub npc");
-    if(header) b.appendChild(el("div","feedback ok",header));
-    b.appendChild(el("div","py","👉 "+t.pinyin));
-    const hz=el("div","hz show",t.hanzi); b.appendChild(hz);
-    b.appendChild(el("div","ru",t.ru));
-    const sp=el("button","speak","🔊 Прослушать образец"); sp.onclick=()=>speak(t.hanzi); b.appendChild(sp);
-    if(words&&words.length){
+    const listen=el("div","listen");
+    const play=el("button","playbig","🔊"); play.onclick=()=>speak(r.hanzi);
+    const lbl=el("span","listenlbl","Слушай реплику. Потом ответь ниже.");
+    listen.appendChild(play); listen.appendChild(lbl); b.appendChild(listen);
+
+    const textWrap=el("div","hidden");
+    textWrap.appendChild(el("div","py",esc(r.pinyin)));
+    textWrap.appendChild(el("div","hz",esc(r.hanzi)));
+    const ruWrap=el("div","hidden");
+    ruWrap.appendChild(el("div","ru",esc(r.ru)));
+    if(r.words&&r.words.length){
       const w=el("div","words");
-      words.forEach(([p,r])=>{const row=el("div","w"); row.appendChild(el("b",null,p)); row.appendChild(el("span",null,r)); w.appendChild(row);});
-      b.appendChild(w);
+      r.words.forEach(x=>{const row=el("div","w"); row.appendChild(el("b",null,esc(x.py))); row.appendChild(el("span",null,esc(x.ru))); w.appendChild(row);});
+      ruWrap.appendChild(w);
     }
+    b.appendChild(textWrap); b.appendChild(ruWrap);
+
+    const acts=el("div","miniact");
+    const bTxt=el("button",null,"показать текст");
+    const bTr=el("button",null,"перевод + разбор");
+    bTxt.onclick=()=>{ textWrap.classList.remove("hidden"); bTxt.remove(); };
+    bTr.onclick=()=>{ textWrap.classList.remove("hidden"); ruWrap.classList.remove("hidden"); bTxt.remove(); bTr.remove(); lbl.textContent="Понял? Отвечай ниже."; };
+    acts.appendChild(bTxt); acts.appendChild(bTr); b.appendChild(acts);
+
+    chat.appendChild(b); scrollDown();
+    if(cfg.show){ textWrap.classList.remove("hidden"); bTxt.remove(); }
+    if(cfg.auto) setTimeout(()=>speak(r.hanzi),250);
+
+    return {
+      reveal(full){ textWrap.classList.remove("hidden"); if(bTxt.parentNode)bTxt.remove(); if(full){ ruWrap.classList.remove("hidden"); if(bTr.parentNode)bTr.remove(); } lbl.textContent="Понял? Отвечай ниже."; scrollDown(); }
+    };
+  }
+
+  function meBubble(text){ const b=el("div","bub me"); b.appendChild(el("div","py",esc(text))); chat.appendChild(b); scrollDown(); }
+
+  function line(cls,o){
+    const w=el("div","line"+(cls?" "+cls:""));
+    w.appendChild(el("div","py",esc(o.pinyin)));
+    w.appendChild(el("div","hz",esc(o.hanzi)));
+    w.appendChild(el("div","ru",esc(o.ru)));
+    const sp=el("button","speak","🔊"); sp.onclick=()=>speak(o.hanzi); w.appendChild(sp);
+    return w;
+  }
+  function feedbackBubble(f){
+    const b=el("div","bub fb");
+    const map={good:["good","✓ Отлично"],ok:["ok","≈ Понятно, но можно лучше"],wrong:["wrong","↺ Есть ошибка"]};
+    const [c,label]=map[f.rating]||map.ok;
+    b.appendChild(el("div","verdict "+c,label));
+    b.appendChild(el("div","cmt",esc(f.comment_ru)));
+    if(f.fixed){ b.appendChild(el("div","lbl","Правильно так:")); b.appendChild(line(null,f.fixed)); }
+    if(f.native && f.native.hanzi!==(f.fixed&&f.fixed.hanzi)){ b.appendChild(el("div","lbl","А носитель сказал бы:")); b.appendChild(line(null,f.native)); }
     chat.appendChild(b); scrollDown();
   }
 
-  // ---------- Состояние игры ----------
-  let scen=null, idx=0, solved=false;
-
-  function openScenario(s){
-    scen=s; idx=0;
-    chat.innerHTML="";
-    $("#menu").classList.add("hidden");
-    $("#chat").classList.remove("hidden");
-    $("#backBtn").classList.remove("hidden");
-    $("#prog").classList.remove("hidden");
-    $("#title").textContent = s.icon+" "+s.title;
-    sysBubble("<b>"+s.title+"</b><br>"+s.desc+"<br><span style='color:var(--accent2)'>Отвечай пиньинем. Застрял — кнопки внизу.</span>");
-    showTurn();
+  // ---------- Ошибки ----------
+  function errText(e){
+    const m=e&&e.message||"";
+    if(m==="NO_KEY"||m==="BAD_KEY") return "Проблема с ключом Gemini. Проверь его в настройках (⚙︎).";
+    if(m==="RATE") return "Слишком много запросов подряд — подожди минутку и попробуй ещё раз.";
+    if(/Failed to fetch|NetworkError/i.test(m)) return "Нет интернета — для разговора нужна сеть.";
+    return "Ошибка: "+m;
   }
-  function showTurn(){
-    solved=false;
-    $("#prog").textContent = (idx+1)+" / "+scen.turns.length;
-    $("#dock").classList.remove("hidden");
-    $("#nextbar").classList.add("hidden");
-    npcBubble(scen.turns[idx].npc);
+
+  // ---------- Ход игры ----------
+  async function openScenario(s){
+    scen=s; history=[]; current=null; chat.innerHTML="";
+    $("#title").textContent=s.icon+" "+s.title;
+    show("chat");
+    sysBubble("<b>"+esc(s.title)+"</b><br>"+esc(s.desc)+"<br><span style='color:var(--accent2)'>Собеседник сейчас заговорит. Слушай 🔊 и отвечай пиньинем.</span>");
+    typing(true); busy=true; setDock(false);
+    try{
+      const {data,rawTurn}=await Gemini.start(s.scene);
+      history.push(Gemini.userTurn("[НАЧАЛО]"), Gemini.modelTurn(rawTurn));
+      typing(false);
+      current=npcBubble(data.reply);
+    }catch(e){ typing(false); sysBubble("⚠️ "+esc(errText(e))); }
+    busy=false; setDock(true);
+  }
+
+  async function sendAnswer(text){
+    if(busy||!text.trim()) return;
+    const val=text.trim();
+    meBubble(val);
+    if(current){ current.reveal(false); current=null; }
     $("#input").value=""; autosize();
-  }
-  function markSolved(){
-    solved=true;
-    $("#dock").classList.add("hidden");
-    $("#nextbar").classList.remove("hidden");
-    const last = idx>=scen.turns.length-1;
-    $("#nextBtn").textContent = last ? "🎉 Сценарий пройден — к списку" : "Дальше ›";
-  }
-
-  function submit(){
-    if(solved) return;
-    const val=$("#input").value.trim();
-    if(!val) return;
-    const t=scen.turns[idx];
-    const ok=check(val,t.accept);
-    meBubble(val, ok);
-    if(ok){
-      modelBubble(t.model, t.words, "Так звучит естественнее / как у носителя:");
-      markSolved();
-    } else {
-      modelBubble(t.model, t.words, "Почти! Носитель сказал бы так:");
-      sysBubble("Можешь попробовать ещё раз своими словами или нажать «Дальше».");
-      markSolved();
-    }
+    typing(true); busy=true; setDock(false);
+    try{
+      const {data,rawTurn}=await Gemini.turn(history, val, scen.scene);
+      history.push(Gemini.userTurn(val), Gemini.modelTurn(rawTurn));
+      typing(false);
+      if(data.feedback) feedbackBubble(data.feedback);
+      current=npcBubble(data.reply);
+    }catch(e){ typing(false); sysBubble("⚠️ "+esc(errText(e))); }
+    busy=false; setDock(true);
   }
 
-  function giveUp(){
-    if(solved) return;
-    const t=scen.turns[idx];
-    modelBubble(t.model, t.words, "💡 В этой ситуации говорят так:");
-    if(t.tip) sysBubble("<b>Подсказка:</b> "+t.tip);
-    markSolved();
+  async function giveHint(){
+    if(busy) return;
+    typing(true); busy=true; setDock(false);
+    try{
+      const txt=await Gemini.hint(history, scen.scene);
+      typing(false);
+      sysBubble("<b>💡 Подсказка:</b><br>"+esc(txt).replace(/\n/g,"<br>"));
+    }catch(e){ typing(false); sysBubble("⚠️ "+esc(errText(e))); }
+    busy=false; setDock(true);
   }
-  function confused(){
-    const t=scen.turns[idx];
-    sysBubble("<b>Он спросил:</b> «"+t.npc.ru+"»<br><span style='color:var(--dim)'>"+t.npc.pinyin+"</span>");
-    // разбор слов вопроса, если есть
-    if(t.words&&t.words.length){
-      let h="<b>Ключевые слова:</b><br>";
-      t.words.forEach(([p,r])=>{h+="<b style='color:var(--accent2)'>"+p+"</b> — "+r+"<br>";});
-      sysBubble(h);
-    }
-    if(t.tip) sysBubble("<b>Что ответить:</b> "+t.tip);
-  }
+  function confused(){ if(current) current.reveal(true); }
+
+  function setDock(on){ $("#sendBtn").disabled=!on; $("#btnGive").disabled=!on; }
 
   // ---------- Ввод ----------
   const input=$("#input");
   function autosize(){ input.style.height="auto"; input.style.height=Math.min(input.scrollHeight,120)+"px"; }
   input.addEventListener("input",autosize);
-  input.addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();submit();}});
-  $("#sendBtn").onclick=submit;
-  $("#btnGive").onclick=giveUp;
+  input.addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault(); sendAnswer(input.value);}});
+  $("#sendBtn").onclick=()=>sendAnswer(input.value);
+  $("#btnGive").onclick=giveHint;
   $("#btnConfused").onclick=confused;
 
-  $("#nextBtn").onclick=()=>{
-    if(idx>=scen.turns.length-1){ backToMenu(); }
-    else { idx++; showTurn(); }
-  };
-  $("#backBtn").onclick=backToMenu;
-
-  function backToMenu(){
-    if("speechSynthesis" in window) speechSynthesis.cancel();
-    $("#chat").classList.add("hidden");
-    $("#dock").classList.add("hidden");
-    $("#nextbar").classList.add("hidden");
-    $("#backBtn").classList.add("hidden");
-    $("#prog").classList.add("hidden");
-    $("#menu").classList.remove("hidden");
-    $("#title").textContent="华语情景";
-    window.scrollTo(0,0);
-  }
-
-  // ---------- Построить меню ----------
+  // ---------- Меню ----------
   const cards=$("#cards");
   SCENARIOS.forEach(s=>{
     const c=el("div","card");
     c.appendChild(el("div","ic",s.icon));
     const box=el("div"); box.appendChild(el("div","t",s.title)); box.appendChild(el("div","d",s.desc));
-    c.appendChild(box);
-    c.onclick=()=>openScenario(s);
+    c.appendChild(box); c.onclick=()=>{ if(Gemini.hasKey()) openScenario(s); else show("setup"); };
     cards.appendChild(c);
   });
 
-  // Разблокировать аудио на первом тапе (требование iOS Safari)
-  document.addEventListener("touchstart",function unlock(){
-    if("speechSynthesis" in window){ const u=new SpeechSynthesisUtterance(" "); u.volume=0; speechSynthesis.speak(u); }
-    document.removeEventListener("touchstart",unlock);
-  },{once:true});
+  // ---------- Кнопки навигации ----------
+  $("#backBtn").onclick=()=>{ if($("#settings").classList.contains("hidden")===false){ show("menu"); } else { $("#title").textContent="华语情景"; show("menu"); } };
+  $("#gearBtn").onclick=()=>{ refreshKeyState(); show("settings"); $("#title").textContent="Настройки"; };
 
-  // Service worker для офлайна
+  // ---------- Ключ ----------
+  function refreshKeyState(){
+    const on=Gemini.hasKey();
+    $("#keyState2").className="keystate "+(on?"ok":"no");
+    $("#keyState2").textContent=on?"✓ Ключ сохранён на этом устройстве.":"Ключ не задан.";
+  }
+  $("#keySave").onclick=()=>{
+    const k=$("#keyInput").value.trim();
+    if(k.length<10){ $("#keyState").className="keystate no"; $("#keyState").textContent="Похоже, ключ слишком короткий. Скопируй его целиком."; return; }
+    Gemini.setKey(k); $("#keyInput").value="";
+    $("#keyState").className="keystate ok"; $("#keyState").textContent="✓ Сохранено!";
+    setTimeout(()=>{ show("menu"); $("#title").textContent="华语情景"; },500);
+  };
+  $("#keyChange").onclick=()=>{ show("setup"); $("#keyInput").value=Gemini.key(); $("#title").textContent="华语情景"; };
+
+  // ---------- Настройки ----------
+  $("#autoSel").checked=cfg.auto; $("#showSel").checked=cfg.show; $("#rateSel").value=cfg.rate;
+  $("#autoSel").onchange=e=>{cfg.auto=e.target.checked;store.set("auto",cfg.auto);};
+  $("#showSel").onchange=e=>{cfg.show=e.target.checked;store.set("show",cfg.show);};
+  $("#rateSel").onchange=e=>{cfg.rate=parseFloat(e.target.value);store.set("rate",cfg.rate);};
+  $("#voiceSel").onchange=e=>{cfg.voiceURI=e.target.value;store.set("voiceURI",cfg.voiceURI);};
+  $("#voiceTest").onclick=()=>speak("你好，我们开始学习中文吧！");
+
+  // ---------- Разблокировать аудио (iOS) ----------
+  document.addEventListener("touchstart",function unlock(){ if("speechSynthesis" in window){const u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u);} document.removeEventListener("touchstart",unlock); },{once:true});
+
+  // ---------- Старт ----------
   if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+  show(Gemini.hasKey()?"menu":"setup");
 })();
 </script>
