@@ -2,120 +2,159 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0f1115">
+<meta name="theme-color" content="#0d0f10">
 <link rel="manifest" href="manifest.json">
 <title>华语情景 · Живой китайский</title>
 <style>
   :root{
-    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --line:#2a2f3a;
-    --txt:#eef1f6; --dim:#9aa4b2; --accent:#e7484f; --accent2:#f4a01c;
-    --good:#3ecb7a; --ok:#f4a01c; --bad:#ff6b6b; --npc:#25304a; --me:#1f3d2e;
+    --bg:#0d0f10; --bg2:#080a0b;
+    --surface:#14181a; --surface2:#1a1f21; --raise:#20262a;
+    --line:rgba(255,255,255,.075); --line2:rgba(255,255,255,.14);
+    --txt:#eef2f0; --dim:#98a29f; --faint:#69736f;
+    --jade:#4faf7c; --jade2:#69c996; --jadeglow:rgba(79,175,124,.14);
+    --gold:#e2b455;
+    --good:#4faf7c; --ok:#e2b455; --bad:#e8746b;
+    --npc:#1b2325; --me:#153027;
+    --shadow:0 8px 24px rgba(0,0,0,.34);
+    --serif:"Songti SC","Songti TC","STSong",Georgia,"Times New Roman",serif;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%}
   body{
-    background:var(--bg); color:var(--txt);
-    font:16px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
+    color:var(--txt);
+    background:
+      radial-gradient(900px 380px at 50% -120px, var(--jadeglow), transparent 62%),
+      linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%) fixed;
+    font:16px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",sans-serif;
     padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-    overscroll-behavior-y:none;
+    overscroll-behavior-y:none; letter-spacing:.1px;
   }
-  .wrap{max-width:640px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
-  header{padding:14px 16px 10px;display:flex;align-items:center;gap:10px;position:sticky;top:0;background:linear-gradient(var(--bg),rgba(15,17,21,.85));backdrop-filter:blur(8px);z-index:5;border-bottom:1px solid var(--line)}
-  header h1{font-size:17px;margin:0;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .iconbtn{background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:8px 12px;font-size:15px}
+  .wrap{max-width:600px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+  header{padding:12px 16px 11px;display:flex;align-items:center;gap:11px;position:sticky;top:0;
+    background:linear-gradient(180deg,rgba(13,15,16,.92),rgba(13,15,16,.72));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:5;border-bottom:1px solid var(--line)}
+  .logo{width:34px;height:34px;flex:none;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px;
+    background:radial-gradient(120% 120% at 30% 20%,#232b2d,#14181a);border:1px solid var(--line2);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+  header h1{font-size:17px;margin:0;font-weight:650;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.2px}
+  .iconbtn{background:var(--surface2);border:1px solid var(--line);color:var(--txt);border-radius:11px;min-width:40px;height:38px;padding:0 12px;font-size:16px}
+  .iconbtn:active{background:var(--raise)}
 
-  .pad{padding:12px 16px 30px}
-  .intro{color:var(--dim);font-size:14px;margin:6px 2px 16px}
-  .card{display:flex;gap:14px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;cursor:pointer;transition:transform .06s}
-  .card:active{transform:scale(.985)}
-  .card .ic{font-size:30px;width:46px;text-align:center}
-  .card .t{font-weight:600;font-size:16px}
-  .card .d{color:var(--dim);font-size:13px;margin-top:2px}
+  .pad{padding:16px 16px 40px}
+  .intro{color:var(--dim);font-size:13.5px;line-height:1.6;margin:2px 2px 18px}
+  .intro code,.box code,.kbdhint code{font-family:ui-monospace,Menlo,monospace;font-size:.9em;background:var(--jadeglow);color:var(--jade2);padding:1px 6px;border-radius:6px}
 
-  .box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
-  .box h2{font-size:15px;margin:0 0 8px}
-  .box p{font-size:13.5px;color:var(--dim);margin:6px 0}
-  .box ol{font-size:13.5px;color:var(--dim);margin:8px 0;padding-left:20px;line-height:1.6}
-  .box a{color:var(--accent2)}
-  .field{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:12px 14px;font-size:15px;margin-top:8px}
-  .btn{width:100%;background:var(--accent);border:0;color:#fff;font-weight:700;border-radius:14px;padding:14px;font-size:16px;margin-top:10px}
-  .btn.sec{background:var(--panel2);border:1px solid var(--line);color:var(--txt);font-weight:600}
-  .keystate{font-size:12.5px;margin-top:8px}
+  .card{display:flex;gap:14px;align-items:center;background:linear-gradient(180deg,var(--surface2),var(--surface));border:1px solid var(--line);border-radius:18px;padding:15px;margin-bottom:11px;cursor:pointer;transition:transform .08s,border-color .15s,box-shadow .15s;box-shadow:0 1px 0 rgba(255,255,255,.03) inset}
+  .card:active{transform:scale(.98);border-color:var(--line2)}
+  @media(hover:hover){.card:hover{border-color:rgba(79,175,124,.4);box-shadow:var(--shadow)}}
+  .card .ic{font-size:25px;width:50px;height:50px;flex:none;display:flex;align-items:center;justify-content:center;border-radius:14px;background:var(--jadeglow);border:1px solid var(--line)}
+  .card .t{font-weight:640;font-size:15.5px;letter-spacing:.2px}
+  .card .d{color:var(--dim);font-size:12.5px;margin-top:2px}
+  .card .go{margin-left:auto;color:var(--faint);font-size:20px;flex:none}
+
+  .box{background:linear-gradient(180deg,var(--surface2),var(--surface));border:1px solid var(--line);border-radius:18px;padding:17px;margin-bottom:14px;box-shadow:var(--shadow)}
+  .box h2{font-size:15px;margin:0 0 10px;font-weight:640;letter-spacing:.2px}
+  .box p{font-size:13px;color:var(--dim);margin:8px 0;line-height:1.6}
+  .box ol{font-size:13px;color:var(--dim);margin:10px 0;padding-left:20px;line-height:1.7}
+  .box a{color:var(--jade2);text-decoration:none;border-bottom:1px solid rgba(105,201,150,.3)}
+  .field{width:100%;background:var(--bg2);border:1px solid var(--line2);color:var(--txt);border-radius:12px;padding:13px 14px;font-size:15px;margin-top:8px;-webkit-appearance:none}
+  .field:focus{outline:none;border-color:var(--jade)}
+  .btn{width:100%;background:linear-gradient(180deg,var(--jade2),var(--jade));border:0;color:#052a17;font-weight:750;border-radius:14px;padding:15px;font-size:15.5px;margin-top:11px;box-shadow:0 6px 16px rgba(79,175,124,.28);letter-spacing:.2px}
+  .btn:active{transform:translateY(1px);box-shadow:0 3px 10px rgba(79,175,124,.24)}
+  .btn.sec{background:var(--surface2);border:1px solid var(--line2);color:var(--txt);font-weight:600;box-shadow:none}
+  .keystate{font-size:12.5px;margin-top:10px;line-height:1.5}
   .keystate.ok{color:var(--good)} .keystate.no{color:var(--bad)}
 
-  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+  /* Брендовый герой на экране ключа */
+  .hero{text-align:center;padding:14px 0 6px}
+  .hero .mark{width:76px;height:76px;margin:0 auto 12px;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:42px;
+    background:radial-gradient(120% 120% at 30% 20%,#252d2f,#121617);border:1px solid var(--line2);box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.07)}
+  .hero .zh{font-family:var(--serif);font-size:30px;font-weight:600;letter-spacing:4px}
+  .hero .tag{color:var(--dim);font-size:13px;margin-top:5px;letter-spacing:.4px}
+
+  .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
   .row:last-child{border-bottom:0}
-  .row label{font-size:15px}
-  .row .sub{font-size:12px;color:var(--dim)}
-  select.field{margin-top:0;width:auto;max-width:190px}
-  .toggle{position:relative;width:52px;height:30px;flex:none}
+  .row label{font-size:14.5px;font-weight:500}
+  .row .sub{font-size:11.5px;color:var(--dim);margin-top:2px}
+  select.field{margin-top:0;width:auto;max-width:180px}
+  input[type=range]{-webkit-appearance:none;height:5px;border-radius:5px;background:var(--raise)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--jade2);box-shadow:0 1px 4px rgba(0,0,0,.4)}
+  .toggle{position:relative;width:50px;height:30px;flex:none}
   .toggle input{display:none}
-  .toggle span{position:absolute;inset:0;background:var(--panel2);border:1px solid var(--line);border-radius:30px;transition:.2s}
-  .toggle span::after{content:"";position:absolute;width:24px;height:24px;left:3px;top:2px;background:#fff;border-radius:50%;transition:.2s}
-  .toggle input:checked+span{background:var(--good);border-color:var(--good)}
-  .toggle input:checked+span::after{left:25px}
+  .toggle span{position:absolute;inset:0;background:var(--raise);border:1px solid var(--line);border-radius:30px;transition:.2s}
+  .toggle span::after{content:"";position:absolute;width:24px;height:24px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+  .toggle input:checked+span{background:var(--jade);border-color:var(--jade)}
+  .toggle input:checked+span::after{left:23px}
 
   /* Чат */
-  .chat{flex:1;padding:14px 12px 6px;display:flex;flex-direction:column;gap:12px}
-  .bub{max-width:90%;padding:12px 14px;border-radius:18px;word-wrap:break-word;animation:pop .18s ease}
-  @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
-  .bub.npc{background:var(--npc);border-bottom-left-radius:6px;align-self:flex-start}
-  .bub.me{background:var(--me);border-bottom-right-radius:6px;align-self:flex-end}
-  .bub.sys{background:var(--panel2);align-self:center;max-width:96%;border:1px solid var(--line);font-size:14px;color:var(--dim)}
-  .bub.fb{background:var(--panel);border:1px solid var(--line);align-self:flex-start;max-width:96%}
-  .py{font-size:17px;font-weight:600;letter-spacing:.2px}
-  .hz{font-size:21px;margin-top:3px}
-  .ru{font-size:13.5px;color:var(--dim);margin-top:4px}
+  .chat{flex:1;padding:16px 13px 8px;display:flex;flex-direction:column;gap:13px}
+  .bub{max-width:90%;padding:13px 15px;border-radius:20px;word-wrap:break-word;animation:pop .2s ease;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+  @keyframes pop{from{opacity:0;transform:translateY(7px)}to{opacity:1}}
+  .bub.npc{background:linear-gradient(180deg,#20292b,var(--npc));border:1px solid var(--line);border-bottom-left-radius:7px;align-self:flex-start}
+  .bub.me{background:linear-gradient(180deg,#1a3a2d,var(--me));border:1px solid rgba(79,175,124,.22);border-bottom-right-radius:7px;align-self:flex-end}
+  .bub.sys{background:var(--surface);align-self:center;max-width:97%;border:1px solid var(--line);font-size:13.5px;color:var(--dim);text-align:center;box-shadow:none}
+  .bub.sys b{color:var(--txt)}
+  .bub.fb{background:linear-gradient(180deg,var(--surface2),var(--surface));border:1px solid var(--line);align-self:flex-start;max-width:97%;border-left:3px solid var(--ok)}
+  .bub.fb.good{border-left-color:var(--good)} .bub.fb.wrong{border-left-color:var(--bad)}
+  .py{font-size:17px;font-weight:640;letter-spacing:.2px}
+  .hz{font-size:22px;margin-top:3px;font-family:var(--serif);line-height:1.35}
+  .ru{font-size:13px;color:var(--dim);margin-top:5px;line-height:1.5}
   .bub.me .ru{color:#bfe6cf}
-  .listen{display:flex;align-items:center;gap:10px}
-  .playbig{background:var(--accent);border:0;color:#fff;width:52px;height:52px;border-radius:50%;font-size:22px;flex:none;display:flex;align-items:center;justify-content:center}
-  .playbig:active{transform:scale(.94)}
-  .listenlbl{font-size:13.5px;color:var(--dim)}
-  .speak{margin-top:8px;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:var(--txt);border-radius:20px;padding:6px 12px;font-size:13px}
-  .speak:active{background:rgba(255,255,255,.16)}
-  .miniact{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
-  .miniact button{font-size:12.5px;background:none;border:1px solid var(--line);color:var(--accent2);border-radius:16px;padding:6px 12px}
+  .listen{display:flex;align-items:center;gap:12px}
+  .playbig{background:linear-gradient(180deg,var(--jade2),var(--jade));border:0;color:#052a17;width:54px;height:54px;border-radius:50%;font-size:22px;flex:none;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(79,175,124,.3)}
+  .playbig:active{transform:scale(.93)}
+  .listenlbl{font-size:13px;color:var(--dim);line-height:1.4}
+  .speak{margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid var(--line2);color:var(--txt);border-radius:20px;padding:6px 13px;font-size:12.5px}
+  .speak:active{background:rgba(255,255,255,.14)}
+  .miniact{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .miniact button{font-size:12px;background:none;border:1px solid var(--line2);color:var(--jade2);border-radius:16px;padding:6px 13px}
+  .miniact button:active{background:var(--jadeglow)}
 
-  .words{margin-top:10px;border-top:1px dashed rgba(255,255,255,.15);padding-top:8px}
-  .words .w{display:flex;gap:8px;font-size:13.5px;padding:3px 0}
-  .words .w b{color:var(--accent2);min-width:92px;font-weight:600}
+  .words{margin-top:11px;border-top:1px dashed var(--line2);padding-top:9px}
+  .words .w{display:flex;gap:10px;font-size:13px;padding:3px 0}
+  .words .w b{color:var(--gold);min-width:92px;font-weight:640}
 
-  .verdict{font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .verdict{font-size:14px;font-weight:750;display:flex;align-items:center;gap:6px}
   .verdict.good{color:var(--good)} .verdict.ok{color:var(--ok)} .verdict.wrong{color:var(--bad)}
-  .fb .cmt{font-size:14px;margin:8px 0}
-  .fb .lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--dim);margin-top:10px}
-  .fb .line{margin-top:3px}
-  .fb .line .py{font-size:15.5px}
+  .fb .cmt{font-size:13.5px;margin:9px 0;line-height:1.55}
+  .fb .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--faint);margin-top:12px;font-weight:600}
+  .fb .line{margin-top:4px}
+  .fb .line .py{font-size:15px}
   .fb .line .hz{font-size:18px}
 
-  .typing{align-self:flex-start;color:var(--dim);font-size:14px;padding:8px 14px}
-  .typing span{display:inline-block;animation:blink 1.2s infinite}
+  .typing{align-self:flex-start;color:var(--dim);font-size:13.5px;padding:10px 15px;background:var(--surface);border:1px solid var(--line);border-radius:16px}
+  .typing span{display:inline-block;animation:blink 1.2s infinite;color:var(--jade2)}
   .typing span:nth-child(2){animation-delay:.2s} .typing span:nth-child(3){animation-delay:.4s}
   @keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
 
-  .dock{position:sticky;bottom:0;background:linear-gradient(rgba(15,17,21,0),var(--bg) 22%);padding:8px 12px calc(10px + env(safe-area-inset-bottom));z-index:5}
-  .helprow{display:flex;gap:8px;margin-bottom:8px}
-  .chip{flex:1;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:11px 8px;font-size:13px;font-weight:500;text-align:center}
-  .chip:active{background:#252b36}
-  .chip.hint{color:var(--accent2)} .chip.give{color:var(--accent)}
-  .inbar{display:flex;gap:8px;align-items:flex-end}
-  .inbar textarea{flex:1;resize:none;background:var(--panel);border:1px solid var(--line);color:var(--txt);border-radius:16px;padding:12px 14px;font-size:16px;max-height:120px;line-height:1.35}
-  .inbar textarea:focus{outline:none;border-color:var(--accent)}
-  .send{flex:none;width:48px;height:48px;border-radius:50%;background:var(--accent);border:0;color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center}
-  .send:disabled{opacity:.4}
-  .kbdhint{font-size:11px;color:var(--dim);text-align:center;margin:6px 0 0}
+  .dock{position:sticky;bottom:0;background:linear-gradient(rgba(13,15,16,0),var(--bg) 26%);padding:8px 13px calc(11px + env(safe-area-inset-bottom));z-index:5}
+  .helprow{display:flex;gap:8px;margin-bottom:9px}
+  .chip{flex:1;background:var(--surface2);border:1px solid var(--line2);color:var(--txt);border-radius:13px;padding:12px 8px;font-size:12.5px;font-weight:550;text-align:center}
+  .chip:active{background:var(--raise)}
+  .chip.hint{color:var(--gold)} .chip.give{color:var(--jade2)}
+  .chip:disabled{opacity:.4}
+  .inbar{display:flex;gap:9px;align-items:flex-end}
+  .inbar textarea{flex:1;resize:none;background:var(--surface2);border:1px solid var(--line2);color:var(--txt);border-radius:18px;padding:13px 15px;font-size:16px;max-height:120px;line-height:1.4}
+  .inbar textarea:focus{outline:none;border-color:var(--jade)}
+  .send{flex:none;width:50px;height:50px;border-radius:50%;background:linear-gradient(180deg,var(--jade2),var(--jade));border:0;color:#052a17;font-size:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 14px rgba(79,175,124,.3)}
+  .send:disabled{opacity:.4;box-shadow:none}
+  .kbdhint{font-size:11px;color:var(--faint);text-align:center;margin:7px 0 0;line-height:1.5}
   .hidden{display:none!important}
 </style>
 
 <div class="wrap">
   <header>
     <button class="iconbtn hidden" id="backBtn">‹</button>
+    <div class="logo">🐼</div>
     <h1 id="title">华语情景</h1>
     <button class="iconbtn" id="gearBtn">⚙︎</button>
   </header>
 
   <!-- ЭКРАН ВВОДА КЛЮЧА -->
   <div class="pad hidden" id="setup">
+    <div class="hero">
+      <div class="mark">🐼</div>
+      <div class="zh">华语情景</div>
+      <div class="tag">Разговорный китайский — живой ИИ-собеседник</div>
+    </div>
     <div class="box">
       <h2>🔑 Один раз: бесплатный ключ Groq</h2>
       <p>Чтобы собеседник понимал любые твои фразы, проверял ошибки и вёл живой разговор, нужен бесплатный ключ. Берём <b>Groq</b> — быстрый и с щедрым бесплатным лимитом. Ключ хранится <b>только в этом телефоне</b>.</p>
@@ -146,7 +185,9 @@
         <select class="field" id="voiceSel"></select></div>
       <div class="row"><div><label>Скорость речи</label></div><input type="range" id="rateSel" min="0.5" max="1.1" step="0.1" style="width:150px"></div>
       <button class="btn sec" id="voiceTest">▶︎ Проверить голос</button>
-      <p>Хочешь более приятный голос? На айфоне: <b>Настройки → Универсальный доступ → Устный контент → Голоса → Китайский</b> — скачай «улучшенный» голос, и он появится в списке выше.</p>
+      <p><b>Хочешь живой женский голос, а не робота?</b> Встроенные голоса iPhone звучат механически. Скачай «улучшенный» — он звучит почти как человек:<br>
+      <b>Настройки iPhone → Универсальный доступ → Устный контент → Голоса → Китайский → Tingting (или Meijia) → нажми ⤓ рядом с «Премиум»/«Улучшенный».</b><br>
+      После загрузки вернись сюда и выбери его в списке выше (помечен ⭐).</p>
     </div>
     <div class="box">
       <h2>⚙︎ Обучение</h2>
@@ -198,24 +239,35 @@
 
   // ---------- Озвучка ----------
   let voices=[];
-  const FEMALE=/ting|meijia|mei-jia|sinji|meilin|panpan|female|婷|美|欣/i;
+  const FEMALE=/ting|meijia|mei-jia|sinji|meilin|panpan|xiao|lili|female|婷|美|欣|晓|莉/i;
+  const NICE=/premium|enhanced|siri|neural/i;             // «улучшенные» голоса звучат человечнее
+  // Оценка голоса: женский + материковый zh-CN + «улучшенный» = выше.
+  function rankVoice(v){
+    let r=0; const n=(v.name||"")+" "+(v.voiceURI||"");
+    if(/zh[-_]?CN|zh_Hans|Chinese \(China/i.test(v.lang+" "+n)) r+=10; else if(/^zh/i.test(v.lang)) r+=4;
+    if(FEMALE.test(n)) r+=20;
+    if(NICE.test(n)) r+=14;
+    if(/li-mu|liangliang|yu-shu|male|亮/i.test(n)) r-=8;   // мужские — ниже
+    return r;
+  }
   function loadVoices(){
-    voices=(speechSynthesis.getVoices()||[]).filter(v=>/^zh/i.test(v.lang));
+    voices=(speechSynthesis.getVoices()||[]).filter(v=>/^zh/i.test(v.lang)).sort((a,b)=>rankVoice(b)-rankVoice(a));
     const sel=$("#voiceSel"); if(!sel) return;
     sel.innerHTML="";
-    voices.forEach(v=>{const o=el("option",null,v.name+" ("+v.lang+")"); o.value=v.voiceURI; sel.appendChild(o);});
+    voices.forEach(v=>{const o=el("option",null,v.name+" ("+v.lang+")"+(NICE.test(v.name)?" ⭐":"")); o.value=v.voiceURI; sel.appendChild(o);});
     if(!voices.length){ sel.appendChild(el("option",null,"— нет китайских голосов —")); $("#voiceSub").textContent="в этом браузере нет кит. голоса — открой в Safari"; return; }
-    // выбрать сохранённый или первый женский
-    let chosen=voices.find(v=>v.voiceURI===cfg.voiceURI) || voices.find(v=>FEMALE.test(v.name)) || voices[0];
+    // сохранённый выбор, иначе лучший по рангу (женский/улучшенный/материковый)
+    let chosen=voices.find(v=>v.voiceURI===cfg.voiceURI) || voices[0];
     cfg.voiceURI=chosen.voiceURI; sel.value=chosen.voiceURI;
-    $("#voiceSub").textContent="выбери самый приятный";
+    $("#voiceSub").textContent="⭐ — «живой» голос; выбери приятный";
   }
   function curVoice(){ return voices.find(v=>v.voiceURI===cfg.voiceURI)||voices[0]||null; }
   function speak(text){
     if(!("speechSynthesis" in window)) return;
     speechSynthesis.cancel();
     const u=new SpeechSynthesisUtterance(text);
-    u.lang="zh-CN"; u.rate=cfg.rate; const v=curVoice(); if(v)u.voice=v;
+    u.lang="zh-CN"; u.rate=cfg.rate; u.pitch=1.05;          // чуть мягче/женственнее
+    const v=curVoice(); if(v)u.voice=v;
     speechSynthesis.speak(u);
   }
   if("speechSynthesis" in window){ loadVoices(); speechSynthesis.onvoiceschanged=loadVoices; }
@@ -289,9 +341,9 @@
     return w;
   }
   function feedbackBubble(f){
-    const b=el("div","bub fb");
     const map={good:["good","✓ Отлично"],ok:["ok","≈ Понятно, но можно лучше"],wrong:["wrong","↺ Есть ошибка"]};
     const [c,label]=map[f.rating]||map.ok;
+    const b=el("div","bub fb "+c);
     b.appendChild(el("div","verdict "+c,label));
     b.appendChild(el("div","cmt",esc(f.comment_ru)));
     if(f.fixed){ b.appendChild(el("div","lbl","Правильно так:")); b.appendChild(line(null,f.fixed)); }
@@ -373,7 +425,8 @@
     const c=el("div","card");
     c.appendChild(el("div","ic",s.icon));
     const box=el("div"); box.appendChild(el("div","t",s.title)); box.appendChild(el("div","d",s.desc));
-    c.appendChild(box); c.onclick=()=>{ if(AI.hasKey()) openScenario(s); else show("setup"); };
+    c.appendChild(box); c.appendChild(el("div","go","›"));
+    c.onclick=()=>{ if(AI.hasKey()) openScenario(s); else show("setup"); };
     cards.appendChild(c);
   });
 

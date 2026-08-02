@@ -73,54 +73,62 @@ const AI = (function(){
 Каждый ход:
 1. Говори живым разговорным китайским уровня HSK 2-3 — короткие естественные фразы.
 2. Оцени реплику Димы (понятна/грамотна/естественна). Ошибка — кратко объясни по-русски, как правильно; хорошо — похвали. Верное и уместное засчитывай, даже если ждал другого.
-3. Дай исправленную его фразу (fixed) и вариант носителя (native).
+3. Дай исправленную его фразу (FIX) и вариант носителя (NAT).
 4. Продолжи разговор в роли: отреагируй и задай встречный вопрос. Помни весь контекст.
 
-Верни СТРОГО валидный JSON и ничего больше (без markdown/текста вне JSON):
-{
-  "feedback": {
-    "rating": "good|ok|wrong",
-    "comment_ru": "объяснение по-русски, 1-2 предложения",
-    "fixed":   { "hanzi": "", "pinyin": "с тонами", "ru": "" },
-    "native":  { "hanzi": "", "pinyin": "с тонами", "ru": "" }
-  },
-  "reply": {
-    "hanzi": "", "pinyin": "с тонами", "ru": "",
-    "words": [ { "py": "", "ru": "" } ]
-  }
-}
-На самом первом ходу (начало сцены) поле feedback поставь null. words — 2-5 ключевых слов из твоей reply.`;
+ФОРМАТ ОТВЕТА — только строки вида КЛЮЧ= значение, каждая строка отдельно, БЕЗ кавычек, markdown и лишнего текста. Каждое поле строго в ОДНУ строку. Порядок ключей:
+RATING= good|ok|wrong
+COMMENT= объяснение по-русски, 1-2 предложения
+FIX_HZ= исправленная фраза Димы иероглифами
+FIX_PY= она же пиньинем с тонами
+FIX_RU= её перевод на русский
+NAT_HZ= как сказал бы носитель, иероглифы
+NAT_PY= пиньинь с тонами
+NAT_RU= перевод на русский
+REP_HZ= твоя следующая реплика иероглифами
+REP_PY= пиньинь с тонами
+REP_RU= перевод на русский
+WORDS= пиньинь=перевод | пиньинь=перевод | пиньинь=перевод
+
+WORDS — 2-5 ключевых слов из REP. На самом первом ходу (начало сцены) не пиши строки RATING/COMMENT/FIX*/NAT* — только REP_* и WORDS.`;
 
   function sys(scene){ return { role:"system", content: SYSTEM + "\n\nСИТУАЦИЯ: " + scene }; }
   function userTurn(t){ return { role:"user", content:t }; }
   function modelTurn(t){ return { role:"assistant", content:t }; }
 
-  function parseJSON(text){
-    let t=(text||"").trim();
-    t=t.replace(/<think>[\s\S]*?<\/think>/gi,"").trim();          // убрать блок размышлений, если есть
-    t=t.replace(/^```(?:json)?\s*/i,"").replace(/\s*```$/,"");    // снять ограждение ```
-    try{ return JSON.parse(t); }catch(e){}
-    const i=t.indexOf("{"), j=t.lastIndexOf("}");
-    if(i>=0&&j>i){
-      let s=t.slice(i,j+1);
-      try{ return JSON.parse(s); }catch(e){}
-      s=s.replace(/,\s*([}\]])/g,"$1");                          // убрать висячие запятые
-      return JSON.parse(s);
+  // Разбор формата пометок КЛЮЧ= значение. Устойчив к любой пунктуации/кавычкам/скобкам.
+  function parse(text){
+    const t=(text||"").replace(/```/g,"").replace(/<think>[\s\S]*?<\/think>/gi,"");
+    const get=k=>{ const m=t.match(new RegExp("^\\s*"+k+"\\s*=\\s*(.+?)\\s*$","mi")); return m?m[1].trim():""; };
+    const repHz=get("REP_HZ");
+    if(!repHz) throw new Error("PARSE_FAIL");
+    const wr=get("WORDS");
+    const words=wr? wr.split("|").map(p=>{ const i=p.indexOf("="); return i<0?null:{py:p.slice(0,i).trim(),ru:p.slice(i+1).trim()}; }).filter(x=>x&&x.py) : [];
+    const reply={ hanzi:repHz, pinyin:get("REP_PY"), ru:get("REP_RU"), words };
+    const ratingRaw=get("RATING").toLowerCase();
+    let feedback=null;
+    if(/good|ok|wrong/.test(ratingRaw)){
+      feedback={
+        rating:(ratingRaw.match(/good|ok|wrong/)||["ok"])[0],
+        comment_ru:get("COMMENT"),
+        fixed:{ hanzi:get("FIX_HZ"), pinyin:get("FIX_PY"), ru:get("FIX_RU") },
+        native:{ hanzi:get("NAT_HZ"), pinyin:get("NAT_PY"), ru:get("NAT_RU") }
+      };
     }
-    throw new Error("Модель вернула не JSON");
+    return { feedback, reply };
   }
 
-  // Запрос с ожиданием JSON + одна повторная попытка при кривом ответе.
-  async function chatJSON(messages){
+  // Запрос + одна повторная попытка, если ответ не разобрался.
+  async function chatParsed(messages){
     let raw=await chat(messages);
-    try{ return parseJSON(raw); }
+    try{ return parse(raw); }
     catch(e){
       const retry=messages.concat([
         modelTurn(raw),
-        userTurn("Твой прошлый ответ не был валидным JSON. Верни ТО ЖЕ САМОЕ строго как один валидный JSON-объект по схеме из системного сообщения — без markdown, без текста вне JSON.")
+        userTurn("Твой ответ был не по формату. Повтори ТО ЖЕ САМОЕ строго строками КЛЮЧ= значение (RATING=, COMMENT=, FIX_HZ=, … REP_HZ=, REP_PY=, REP_RU=, WORDS=), каждое поле в одну строку, без кавычек и лишнего текста.")
       ]);
       raw=await chat(retry);
-      return parseJSON(raw);
+      return parse(raw);
     }
   }
 
@@ -130,7 +138,7 @@ const AI = (function(){
     // серверную валидацию, которая бракует ответ целиком. Просим JSON в промпте и
     // разбираем сами (parseJSON терпим к обёрткам и лишнему тексту). max_tokens с запасом,
     // чтобы длинный ответ (feedback+reply+words, кит.+рус.) не обрывался и не ломал JSON.
-    const body={ model: model()||"llama-3.3-70b-versatile", messages, temperature:0.6, max_tokens:1400 };
+    const body={ model: model()||"llama-3.3-70b-versatile", messages, temperature:0.6, max_tokens:900 };
     const headers={ "Content-Type":"application/json", "Authorization":"Bearer "+key() };
     if(provider()==="openrouter"){ headers["HTTP-Referer"]="https://dvishnevskiy24.github.io/chinese-sim/"; headers["X-Title"]="chinese-sim"; }
     const res=await fetch(base()+"/chat/completions",{ method:"POST", headers, body:JSON.stringify(body) });
@@ -148,20 +156,20 @@ const AI = (function(){
 
   // Начать сцену.
   async function start(scene){
-    const data=await chatJSON([ sys(scene), userTurn("[НАЧАЛО СЦЕНЫ] Поприветствуй Диму и задай первую реплику по своей роли. feedback = null.") ]);
+    const data=await chatParsed([ sys(scene), userTurn("[НАЧАЛО СЦЕНЫ] Поприветствуй Диму и задай первую реплику по своей роли. Только REP_* и WORDS.") ]);
     return { data, rawTurn: data.reply ? data.reply.hanzi : "" };
   }
 
   // Ход: оценка ответа Димы + следующая реплика.
   async function turn(history, userText, scene){
     const msgs=[ sys(scene) ].concat(history).concat([ userTurn(userText) ]);
-    const data=await chatJSON(msgs);
+    const data=await chatParsed(msgs);
     return { data, userText, rawTurn: data.reply ? data.reply.hanzi : "" };
   }
 
   // Подсказка (обычный текст, сцену не двигает).
   async function hint(history, scene){
-    const msgs=[ sys(scene) ].concat(history).concat([ userTurn("[СИСТЕМА] Дима не знает, что ответить. Не продолжай сцену и не давай JSON. Просто подскажи ПО-РУССКИ в 1-2 предложениях, что уместно сказать, и дай ОДИН короткий пример в формате: пиньинь — перевод.") ]);
+    const msgs=[ sys(scene) ].concat(history).concat([ userTurn("[СИСТЕМА] Дима не знает, что ответить. Не продолжай сцену и не используй формат КЛЮЧ=. Просто подскажи ПО-РУССКИ в 1-2 предложениях, что уместно сказать, и дай ОДИН короткий пример: пиньинь — перевод.") ]);
     return await chat(msgs);
   }
 
