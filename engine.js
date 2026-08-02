@@ -96,10 +96,17 @@ WORDS — 2-5 ключевых слов из REP. На самом первом �
   function userTurn(t){ return { role:"user", content:t }; }
   function modelTurn(t){ return { role:"assistant", content:t }; }
 
-  // Разбор формата пометок КЛЮЧ= значение. Устойчив к любой пунктуации/кавычкам/скобкам.
+  // Разбор формата пометок КЛЮЧ= значение. Значение = всё после КЛЮЧ= до СЛЕДУЮЩЕГО ключа
+  // (или конца), независимо от переносов строк — поэтому даже если модель слепит поля
+  // в одну строку, в каждое поле попадёт только его содержимое (не метки соседей).
+  const KEYS=["RATING","COMMENT","FIX_HZ","FIX_PY","FIX_RU","NAT_HZ","NAT_PY","NAT_RU","REP_HZ","REP_PY","REP_RU","WORDS"];
   function parse(text){
     const t=(text||"").replace(/```/g,"").replace(/<think>[\s\S]*?<\/think>/gi,"");
-    const get=k=>{ const m=t.match(new RegExp("^\\s*"+k+"\\s*=\\s*(.+?)\\s*$","mi")); return m?m[1].trim():""; };
+    const keyAlt=KEYS.join("|");
+    const get=k=>{
+      const m=t.match(new RegExp("\\b"+k+"\\s*[=:]\\s*([\\s\\S]*?)\\s*(?=\\b(?:"+keyAlt+")\\s*[=:]|$)","i"));
+      return m ? m[1].replace(/\s+/g," ").trim() : "";
+    };
     const repHz=get("REP_HZ");
     if(!repHz) throw new Error("PARSE_FAIL");
     const wr=get("WORDS");

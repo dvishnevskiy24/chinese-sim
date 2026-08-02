@@ -264,6 +264,8 @@
   function curVoice(){ return voices.find(v=>v.voiceURI===cfg.voiceURI)||voices[0]||null; }
   function speak(text){
     if(!("speechSynthesis" in window)) return;
+    text=(text||"").replace(/\b(RATING|COMMENT|FIX_[A-Z]{2}|NAT_[A-Z]{2}|REP_[A-Z]{2}|WORDS)\s*[=:]/gi,"").replace(/\s+/g," ").trim();
+    if(!text) return;
     speechSynthesis.cancel();
     const u=new SpeechSynthesisUtterance(text);
     u.lang="zh-CN"; u.rate=cfg.rate; u.pitch=1.05;          // чуть мягче/женственнее
